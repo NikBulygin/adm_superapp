@@ -1,0 +1,9 @@
+[submodule "frontend"]
+	path = frontend
+	url = ./frontend
+[submodule "auth"]
+	path = auth
+	url = ./auth
+[submodule "backend"]
+	path = backend
+	url = ./backend

@@ -1,0 +1,112 @@
+@startuml marketplace_frontend
+title Корневой frontend/ (Nuxt) — модуль marketplace: компоненты и состояния
+
+skinparam componentStyle rectangle
+skinparam shadowing false
+
+package "Пациентский поток" {
+  [ClinicResolver] as Resolver
+  [ClinicThemeProvider] as Theme
+  [MarketplaceHomePage] as Home
+  [ClinicLandingPage] as Landing
+  [SpecialistCatalogPage] as Catalog
+  [SpecialistCard] as Card
+  [FiltersSidebar] as Filters
+  [SearchBar] as Search
+  [SpecialistProfilePage] as Profile
+  [ServiceList] as SvcList
+  [AvailabilityCalendar] as Cal
+  [TimeSlotList] as Slots
+  [BookingDrawer] as Drawer
+  [AppointmentForm] as Form
+  [ProfileCompletionStep] as ProfileStep
+  [BookingSummary] as Summary
+  [BookingSuccess] as Ok
+}
+
+package "Админ / сотрудники" {
+  [AdminSchedulePage] as AdmSch
+  [ScheduleBoard] as Board
+  [SpecialistSelector] as SelSpec
+  [BranchSelector] as SelBranch
+  [SlotEditor] as SlotEd
+  [ClinicBrandingPage] as Branding
+  [AdminAppointmentsPage] as AdmApp
+  [AppointmentTable] as Table
+  [AppointmentDetails] as Det
+  [RescheduleModal] as Resch
+  [DoctorSchedulePage] as DocSch
+  [DoctorAppointmentList] as DocApps
+  [CallCenterPage] as CC
+  [SalesPage] as Sales
+}
+
+package "Состояние и API" {
+  [useBookingFlow] as BookStore
+  [useScheduleAdmin] as SchStore
+  [useAppointmentsAdmin] as AppStore
+  [useClinicTheme] as ThemeStore
+  [useMarketplaceApi] as Api
+}
+
+Resolver --> Theme
+Resolver --> Landing
+Landing --> Home
+Home --> Catalog
+Catalog --> Card
+Catalog --> Filters
+Catalog --> Search
+Card --> Profile
+Profile --> SvcList
+Profile --> Cal
+Profile --> Slots
+Profile --> Drawer
+Drawer --> Form
+Form --> ProfileStep
+ProfileStep --> Summary
+Form --> Summary
+Form --> Ok
+
+AdmSch --> Board
+AdmSch --> SelSpec
+AdmSch --> SelBranch
+AdmSch --> SlotEd
+Branding --> ThemeStore
+AdmApp --> Table
+AdmApp --> Det
+AdmApp --> Resch
+DocSch --> DocApps
+
+Profile --> BookStore
+AdmSch --> SchStore
+AdmApp --> AppStore
+CC --> AppStore
+Sales --> AppStore
+
+BookStore --> Api
+SchStore --> Api
+AppStore --> Api
+ThemeStore --> Api
+
+newpage
+
+title Поток записи — состояния формы
+
+[*] --> BranchSelected
+BranchSelected --> SpecialistSelected
+SpecialistSelected --> ServiceSelected
+ServiceSelected --> DateSelected
+DateSelected --> SlotSelected
+SlotSelected --> FormFilled
+FormFilled --> Submitting
+FormFilled --> NeedMissingProfileFields
+NeedMissingProfileFields --> ProfileCompleted
+ProfileCompleted --> Submitting
+Submitting --> Success
+Submitting --> ValidationError
+Submitting --> SlotConflict
+ValidationError --> FormFilled
+SlotConflict --> DateSelected
+Success --> [*]
+
+@enduml

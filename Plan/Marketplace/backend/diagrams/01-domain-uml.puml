@@ -1,0 +1,181 @@
+@startuml marketplace_domain
+title adm_superApp / marketplace — доменные сущности (MVP)
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+
+class Organization {
+  +UUID id
+  +String name
+  +String status
+  +String timezone
+}
+
+class ClinicBranch {
+  +UUID id
+  +UUID organization_id
+  +String name
+  +String address
+  +String phone
+  +String timezone
+  +String status
+}
+
+class ClinicFrontendConfig {
+  +UUID id
+  +UUID organization_id
+  +UUID clinic_branch_id
+  +String clinic_slug
+  +String domain
+  +JSON theme_config
+  +JSON landing_config
+  +Boolean is_public
+  +String status
+}
+
+class ClinicMember {
+  +UUID id
+  +UUID organization_id
+  +UUID clinic_branch_id
+  +UUID user_id
+  +String status
+}
+
+class ClinicMemberRole {
+  +UUID clinic_member_id
+  +String role_code
+  +String scope_type
+  +UUID scope_id
+  +String role_alias
+}
+
+class Specialty {
+  +UUID id
+  +UUID organization_id
+  +String code
+  +String name
+  +String status
+}
+
+class Specialist {
+  +UUID id
+  +UUID organization_id
+  +UUID clinic_branch_id
+  +UUID employee_id
+  +String full_name
+  +String description
+  +String status
+}
+
+class Service {
+  +UUID id
+  +UUID organization_id
+  +UUID clinic_branch_id
+  +String code
+  +String name
+  +Integer duration_minutes
+  +Decimal price
+  +Boolean is_public
+  +String status
+}
+
+class SpecialistService {
+  +UUID specialist_id
+  +UUID service_id
+  +Integer duration_override_minutes
+  +Decimal price_override
+}
+
+class ScheduleTemplate {
+  +UUID id
+  +UUID specialist_id
+  +Integer day_of_week
+  +Time starts_at
+  +Time ends_at
+  +Integer slot_step_minutes
+  +Boolean is_active
+}
+
+class ScheduleException {
+  +UUID id
+  +UUID specialist_id
+  +Date exception_date
+  +String reason
+  +Boolean is_day_off
+}
+
+class ScheduleSlot {
+  +UUID id
+  +UUID specialist_id
+  +UUID clinic_branch_id
+  +DateTime starts_at
+  +DateTime ends_at
+  +String status
+  +String source
+}
+
+class PatientRef {
+  +UUID id
+  +UUID patient_id
+  +String full_name
+  +String last_name
+  +Integer age
+  +String phone
+  +String email
+  +String iin
+}
+
+class Appointment {
+  +UUID id
+  +UUID organization_id
+  +UUID clinic_branch_id
+  +UUID patient_ref_id
+  +UUID specialist_id
+  +UUID service_id
+  +UUID schedule_slot_id
+  +DateTime starts_at
+  +DateTime ends_at
+  +String status
+  +String source
+  +UUID created_by_user_id
+}
+
+class AppointmentEvent {
+  +UUID id
+  +UUID appointment_id
+  +String event_type
+  +JSON payload
+  +UUID created_by_user_id
+  +DateTime created_at
+}
+
+Organization "1" o-- "many" ClinicBranch
+Organization "1" o-- "many" ClinicFrontendConfig
+Organization "1" o-- "many" ClinicMember
+Organization "1" o-- "many" Specialty
+Organization "1" o-- "many" Specialist
+Organization "1" o-- "many" Service
+
+ClinicBranch "1" o-- "many" Specialist
+ClinicBranch "1" o-- "many" Service
+ClinicBranch "1" o-- "many" ClinicFrontendConfig
+ClinicBranch "1" o-- "many" ClinicMember
+
+ClinicMember "1" o-- "many" ClinicMemberRole
+
+Specialist }o--o{ Specialty : specialist_specialties
+
+Specialist "1" o-- "many" ScheduleTemplate
+Specialist "1" o-- "many" ScheduleException
+Specialist "1" o-- "many" ScheduleSlot
+
+Specialist "1" *-- "many" SpecialistService
+Service "1" *-- "many" SpecialistService
+
+ScheduleSlot "1" o-- "0..1" Appointment
+PatientRef "1" o-- "many" Appointment
+Service "1" o-- "many" Appointment
+ClinicBranch "1" o-- "many" Appointment
+Appointment "1" o-- "many" AppointmentEvent
+
+@enduml

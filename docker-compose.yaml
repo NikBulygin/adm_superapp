@@ -1,0 +1,22 @@
+name: adm_super_app
+
+include:
+  - path: ./auth/docker-compose.yml
+    project_directory: ./auth
+  - path: ./frontend/docker-compose.yml
+    project_directory: ./frontend
+  - path: ./marketPlace/docker-compose.yml
+    project_directory: ./marketPlace
+
+services:
+  gateway:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    ports:
+      - "${GATEWAY_PORT:-3120}:80"
+    volumes:
+      - ./gateway/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - frontend
+      - backend
+      - marketplace-backend

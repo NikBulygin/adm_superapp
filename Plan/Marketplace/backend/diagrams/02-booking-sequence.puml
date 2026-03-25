@@ -1,0 +1,85 @@
+@startuml marketplace_booking_sequences
+title Запись и перенос — sequence diagrams
+
+autonumber
+actor "PatientOrRegistrar" as User
+participant "NuxtFrontend" as FE
+participant "MarketplaceApi" as API
+participant "AppointmentService" as AppSvc
+participant "ScheduleService" as SchSvc
+database "PostgreSQL" as DB
+
+User -> FE : Выбор специалиста, даты, услуги, слота
+FE -> API : POST /appointments
+API -> AppSvc : CreateAppointment(command)
+AppSvc -> SchSvc : ValidateSlot(slot_id, specialist_id)
+SchSvc -> DB : SELECT slot FOR UPDATE
+DB --> SchSvc : slot(status=available)
+SchSvc --> AppSvc : SlotIsAvailable
+AppSvc -> DB : INSERT appointments(...)
+AppSvc -> DB : UPDATE schedule_slots SET status='booked'
+AppSvc -> DB : INSERT appointment_events(event_type='created')
+DB --> AppSvc : COMMIT
+AppSvc --> API : appointment_id + status
+API --> FE : 201 Created
+FE --> User : Подтверждение записи
+
+newpage
+
+title Запись — слот уже занят (409)
+
+autonumber
+actor "PatientOrRegistrar" as User2
+participant "NuxtFrontend" as FE2
+participant "MarketplaceApi" as API2
+database "PostgreSQL" as DB2
+
+User2 -> FE2 : Отправка формы записи
+FE2 -> API2 : POST /appointments
+API2 -> DB2 : SELECT slot FOR UPDATE
+DB2 --> API2 : slot(status=booked)
+API2 --> FE2 : 409 Conflict
+FE2 --> User2 : Слот занят
+
+newpage
+
+title Перенос записи
+
+autonumber
+actor "RegistrarOrPatient" as User3
+participant "MarketplaceApi" as API3
+participant "AppointmentService" as AppSvc3
+database "PostgreSQL" as DB3
+
+User3 -> API3 : POST /appointments/:id/reschedule
+API3 -> AppSvc3 : RescheduleAppointment(id, new_slot_id)
+AppSvc3 -> DB3 : SELECT old_appointment FOR UPDATE
+AppSvc3 -> DB3 : SELECT new_slot FOR UPDATE
+AppSvc3 -> DB3 : UPDATE old_slot SET status='available'
+AppSvc3 -> DB3 : UPDATE new_slot SET status='booked'
+AppSvc3 -> DB3 : UPDATE appointments SET starts_at, ends_at, schedule_slot_id
+AppSvc3 -> DB3 : INSERT appointment_events(event_type='rescheduled')
+DB3 --> AppSvc3 : COMMIT
+AppSvc3 --> API3 : updated appointment
+
+newpage
+
+title Авторизованный пользователь без обязательных полей
+
+autonumber
+actor "AuthorizedUser" as User4
+participant "NuxtFrontend" as FE4
+participant "AuthApi" as Auth4
+participant "MarketplaceApi" as API4
+
+User4 -> FE4 : Выбор специалиста и слота
+FE4 -> Auth4 : GET /me
+Auth4 --> FE4 : profile(phone missing, iin missing)
+FE4 --> User4 : Показать шаг дозаполнения профиля
+User4 -> FE4 : Ввести phone + iin
+FE4 -> Auth4 : PATCH required profile fields
+Auth4 --> FE4 : profile updated
+FE4 -> API4 : POST /appointments
+API4 --> FE4 : 201 Created
+
+@enduml
