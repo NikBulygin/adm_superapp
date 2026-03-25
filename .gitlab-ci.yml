@@ -30,7 +30,7 @@ variables:
   MSG="project=${PROJECT_NAME} | branch=${CI_COMMIT_REF_NAME} | env=${ENVIRONMENT} | stage=${CI_JOB_STAGE} | status=STARTED | pipeline=${CI_PIPELINE_URL}"
   curl -sS -X POST "https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage" \
     -d chat_id="${TG_GROUP_ID}" \
-    -d text="${MSG}" >/dev/null
+    -d text="${MSG}" >/dev/null || true
 
 .notify_stage_end: &notify_stage_end |
   STATUS="SUCCESS"
@@ -38,7 +38,7 @@ variables:
   MSG="project=${PROJECT_NAME} | branch=${CI_COMMIT_REF_NAME} | env=${ENVIRONMENT} | stage=${CI_JOB_STAGE} | status=${STATUS} | pipeline=${CI_PIPELINE_URL}"
   curl -sS -X POST "https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage" \
     -d chat_id="${TG_GROUP_ID}" \
-    -d text="${MSG}" >/dev/null
+    -d text="${MSG}" >/dev/null || true
 
 build_images:
   stage: build
